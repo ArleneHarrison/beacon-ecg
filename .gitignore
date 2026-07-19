@@ -1,0 +1,38 @@
+# Data — NEVER commit. MIMIC-IV / MIMIC-IV-ECG / MIMIC-IV-ECHO and EchoNext are
+# credentialed datasets; redistributing any derivative record-level data breaches the DUA.
+*.parquet
+*.csv
+*.npy
+*.npz
+*.dat
+*.hea
+*.h5
+*.hdf5
+data/
+ecg_raw/
+pack/
+echonext/
+
+# Model weights — these are trained on credentialed data; treat as restricted.
+*.pt
+*.pth
+*.ckpt
+ckpt/
+outputs/
+
+# Credentials
+.env
+*.pem
+cookies.txt
+paths.txt
+
+# Python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db

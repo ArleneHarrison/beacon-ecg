@@ -1,0 +1,37 @@
+cff-version: 1.2.0
+title: "BEACON-ECG: Beyond-Echo Assessment of Cardiac structure and Outcome from a single 12-lead electrocardiogram"
+message: "If you use this software, please cite it using the metadata from this file."
+type: software
+abstract: >-
+  Reproduction code for BEACON-ECG, a multitask deep-learning model that predicts
+  echocardiographically-defined structural heart disease (HFrEF, severe aortic stenosis,
+  left-ventricular hypertrophy, LVEF) and 1-year mortality from a single 12-lead ECG.
+  Developed on MIMIC-IV / MIMIC-IV-ECG / MIMIC-IV-ECHO and externally validated without
+  retraining on EchoNext (Columbia University Irving Medical Center). This repository
+  contains code only; no patient data are redistributed.
+license: MIT
+repository-code: "https://github.com/ArleneHarrison/beacon-ecg"
+keywords:
+  - electrocardiography
+  - deep learning
+  - structural heart disease
+  - aortic stenosis
+  - heart failure
+  - external validation
+  - MIMIC-IV
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ⚠ MUST BE COMPLETED BEFORE TAGGING THE RELEASE
+#
+# Zenodo reads this file to build the DOI record. Whatever is here when the
+# release is tagged becomes the permanent, citable author list — a published
+# DOI record cannot be silently corrected afterwards (it requires a new version).
+#
+# Replace the placeholder below with the real author list, in manuscript order,
+# then delete this comment block.
+# ─────────────────────────────────────────────────────────────────────────────
+authors:
+  - given-names: "REPLACE-BEFORE-RELEASE"
+    family-names: "REPLACE-BEFORE-RELEASE"
+    affiliation: "REPLACE-BEFORE-RELEASE"
+    # orcid: "https://orcid.org/0000-0000-0000-0000"
