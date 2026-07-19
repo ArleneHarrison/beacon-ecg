@@ -103,14 +103,18 @@ for i, (k, lab) in enumerate(TASKS):
            yerr=[[v - lo], [hi - v]], capsize=2, error_kw={"lw": 0.7},
            label="BEACON-ECG (ensemble)" if i == 0 else "")
     ax.text(i + w, hi + 0.008, f"{v:.3f}", ha="center", fontsize=6.4, fontweight="bold")
-ax.axhline(0.5, color="black", lw=0.6, ls="--")
-ax.text(len(TASKS) - 0.42, 0.508, "chance", fontsize=5.8, style="italic", color="#555555")
 ax.set_xticks(x); ax.set_xticklabels([l for _, l in TASKS])
 ax.set_ylim(0.5, 0.97); ax.set_ylabel("Test AUROC")
 ax.legend(frameon=False, loc="upper center", bbox_to_anchor=(0.5, 1.22), ncol=3)
-ax.text(0.0, 0.515, "no tabular\ncomparator", ha="center", fontsize=5.5,
-        color="#777777", style="italic", transform=ax.transData)
-ax.annotate("", xy=(2 - w, 0.5), xytext=(2 - w, 0.5))
+# LVH has no tabular comparator (wall thickness is absent from the machine-measurement
+# feature set). Mark the empty slot in place rather than annotating the wrong group.
+_i_lvh = [k for k, _ in TASKS].index("lvh")
+ax.bar(_i_lvh - w, 0.03, w, bottom=0.5, color="none", edgecolor="#BBBBBB", lw=0.6, ls=":")
+ax.text(_i_lvh - w, 0.545, "no tabular\ncomparator", ha="center", va="bottom",
+        fontsize=5.2, color="#888888", style="italic", rotation=0)
+ax.axhline(0.5, color="black", lw=0.8, ls="--")
+ax.text(-0.55, 0.505, "chance", fontsize=5.8, style="italic", color="#555555",
+        ha="left", va="bottom")
 plt.tight_layout(); plt.savefig(f"{OUT}/Figure2_model_vs_baseline.png", bbox_inches="tight"); plt.close()
 
 # ================================================ Fig 3: external validation
@@ -244,15 +248,23 @@ a1.set_xlabel("Mean predicted risk"); a1.set_ylabel("Observed frequency")
 a1.set_xlim(0, 0.6); a1.set_ylim(0, 0.6)
 a1.legend(frameon=False, fontsize=6, loc="upper left")
 a1.set_title("A  Calibration (decile bins)", loc="left", fontweight="bold", fontsize=8)
-nb = ev["discrimination_calibration"]["hfref_le40"]["net_benefit"]
-ths = np.array([float(t) for t in nb]); vals = np.array([nb[t] for t in nb])
-o = np.argsort(ths); ths, vals = ths[o], vals[o]
-prev = ev["discrimination_calibration"]["hfref_le40"]["pos_rate"]
-a2.plot(ths, vals, "-", color=C["final"], lw=1.4, label="BEACON-ECG")
-a2.plot(ths, prev - (1-prev)*ths/(1-ths), "--", color="#888888", lw=1.0, label="Treat all")
+# Decision curve recomputed across a full threshold grid. The stored JSON holds only a
+# handful of thresholds (0.05-0.30), which rendered as a curve that stopped mid-axis.
+_s = d[d.hfref_le40.notna() & d.pred_hfref_le40.notna()]
+_y = _s.hfref_le40.values.astype(int); _p = _s.pred_hfref_le40.values.astype(float)
+_n = len(_y); prev = _y.mean()
+ths = np.linspace(0.01, 0.50, 99)
+nb_model, nb_all = [], []
+for pt in ths:
+    f = _p >= pt
+    tp = ((f == 1) & (_y == 1)).sum(); fp = ((f == 1) & (_y == 0)).sum()
+    nb_model.append(tp/_n - (fp/_n)*(pt/(1-pt)))
+    nb_all.append(prev - (1-prev)*(pt/(1-pt)))
+a2.plot(ths, nb_model, "-", color=C["final"], lw=1.5, label="BEACON-ECG")
+a2.plot(ths, nb_all, "--", color="#888888", lw=1.0, label="Treat all")
 a2.axhline(0, color="black", lw=0.8, ls=":", label="Treat none")
 a2.set_xlabel("Threshold probability"); a2.set_ylabel("Net benefit")
-a2.set_xlim(0, 0.5); a2.set_ylim(-0.02, max(vals)*1.15)
+a2.set_xlim(0, 0.5); a2.set_ylim(-0.03, max(nb_model)*1.15)
 a2.legend(frameon=False, fontsize=6.2)
 a2.set_title("B  Decision curve (HFrEF)", loc="left", fontweight="bold", fontsize=8)
 plt.tight_layout(); plt.savefig(f"{OUT}/Figure6_calibration_dca.png", bbox_inches="tight"); plt.close()
