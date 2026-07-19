@@ -20,18 +20,8 @@ keywords:
   - external validation
   - MIMIC-IV
 
-# ─────────────────────────────────────────────────────────────────────────────
-# ⚠ MUST BE COMPLETED BEFORE TAGGING THE RELEASE
-#
-# Zenodo reads this file to build the DOI record. Whatever is here when the
-# release is tagged becomes the permanent, citable author list — a published
-# DOI record cannot be silently corrected afterwards (it requires a new version).
-#
-# Replace the placeholder below with the real author list, in manuscript order,
-# then delete this comment block.
-# ─────────────────────────────────────────────────────────────────────────────
 authors:
-  - given-names: "REPLACE-BEFORE-RELEASE"
-    family-names: "REPLACE-BEFORE-RELEASE"
-    affiliation: "REPLACE-BEFORE-RELEASE"
+  - given-names: "Zhiyong"
+    family-names: "Tao"
+    # affiliation: ""
     # orcid: "https://orcid.org/0000-0000-0000-0000"
