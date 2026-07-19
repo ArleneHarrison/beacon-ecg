@@ -95,14 +95,18 @@ for task in ["lvh", "hfref_le40", "dead_365d"]:
                              "p": round(float(r2.pvalues["black"]), 5),
                              "ci_OR": [round(float(np.exp(v)), 3)
                                        for v in r2.conf_int().loc["black"].tolist()]},
-            # Attenuation is only meaningful when there is an effect to attenuate.
-            # With b1 near zero the ratio explodes (an earlier version reported -803%
-            # for mortality, where b1 was 0.004 - an artefact, not a finding).
+            # Attenuation is only meaningful when there is an effect to attenuate:
+            # the unadjusted coefficient must be both non-negligible AND distinguishable
+            # from zero. Reporting it otherwise is misleading in two ways - with b1 near
+            # zero the ratio explodes (an earlier version reported -803% for mortality,
+            # where b1 was 0.004), and quoting an attenuation for a null effect implies
+            # there was something there to attenuate.
             "attenuation_pct": (round(100 * (1 - abs(b2) / abs(b1)), 1)
-                                if abs(b1) > 0.05 else None),
-            "attenuation_note": (None if abs(b1) > 0.05 else
-                                 "unadjusted race coefficient is ~0; there is no effect "
-                                 "to attenuate and the percentage is not defined"),
+                                if abs(b1) > 0.05 and r1.pvalues["black"] < 0.05 else None),
+            "attenuation_note": (None if abs(b1) > 0.05 and r1.pvalues["black"] < 0.05 else
+                                 "unadjusted race coefficient is not distinguishable from "
+                                 "zero; there is no effect to attenuate and the percentage "
+                                 "is not defined"),
             "reading": "race_coef > 0 means the model UNDER-predicts risk for Black patients "
                        "conditional on its own prediction. If the coefficient attenuates "
                        "substantially after age adjustment, the effect was age composition.",
