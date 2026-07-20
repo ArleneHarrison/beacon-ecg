@@ -51,9 +51,9 @@ for k, _ in TASKS:
     assert abs(a - fin[k]["auroc"]) < 5e-4, f"{k} mismatch"
     print(f"  OK  {k:<12} {a:.4f}")
 
-def tag(ax, letter, title, x=-0.02, y=1.06):
+def tag(ax, letter, title, x=-0.02, y=1.06, dx=0.028):
     ax.text(x, y, letter, transform=ax.transAxes, fontsize=9, fontweight="bold", va="bottom")
-    ax.text(x + 0.028, y, title, transform=ax.transAxes, fontsize=7.6,
+    ax.text(x + dx, y, title, transform=ax.transAxes, fontsize=7.6,
             fontweight="bold", va="bottom")
 
 def rbox(ax, x, y, w, h, txt, fc, ec, fs=6.5, weight="normal"):
@@ -120,7 +120,7 @@ def panel_flow(ax):
        "HFrEF · severe AS · LV hypertrophy · LVEF · 1-year mortality")
 
 def panel_arch(ax):
-    ax.axis("off"); ax.set_xlim(0, 100); ax.set_ylim(0, 74)
+    ax.axis("off"); ax.set_xlim(0, 100); ax.set_ylim(-9, 74)
     rbox(ax, 0.5, 42, 12, 9.5, "12-lead ECG\n10 s @ 500 Hz\n12 × 5000", "#EAF1F7", DBLUE, 6.0)
     ax.plot([12.5, 15.5], [46.7, 46.7], color="#333333", lw=0.9)
     ax.plot([15.5, 15.5], [23, 63], color="#333333", lw=0.9)
@@ -235,12 +235,13 @@ def panel_external(ax):
                hatch="\\\\", yerr=[[v-lo]], capsize=2, error_kw={"lw": 0.7},
                label="External (EchoNext)" if i == 0 else "")
         ax.text(i+w/2, hi+0.01, f"{v:.3f}", ha="center", fontsize=5.8, fontweight="bold")
-        ax.text(i, 0.513, f"n={ext[k]['n']:,}", ha="center", fontsize=5.2, color="#555555")
     ax.axhline(0.5, color="black", lw=0.8, ls="--")
-    ax.set_xticks(x); ax.set_xticklabels(["HFrEF", "LV hypertrophy"], fontsize=6.2)
+    ax.set_xticks(x)
+    ax.set_xticklabels([f"HFrEF\n(n={ext['hfref_le40']['n']:,})",
+                        f"LV hypertrophy\n(n={ext['lvh']['n']:,})"], fontsize=6.0)
     ax.set_ylim(0.5, 1.0); ax.set_ylabel("AUROC")
     ax.legend(frameon=False, loc="upper center", bbox_to_anchor=(0.5, 1.16), ncol=2, fontsize=5.8)
-    ax.text(0.5, 0.02, "no retraining · 250→500 Hz shift", transform=ax.transAxes,
+    ax.text(0.5, -0.32, "250 Hz → 500 Hz resampling", transform=ax.transAxes,
             ha="center", fontsize=5.4, style="italic", color="#555555")
 
 en = sv["echo_normal_LVEF>50"]
@@ -348,15 +349,15 @@ b = fig.add_subplot(gs[1]); panel_flow(b);    tag(b, "B", "Cohort construction a
 fig.savefig(f"{OUT}/Figure1_design.png", bbox_inches="tight"); plt.close()
 
 fig = plt.figure(figsize=(7.3, 7.6))
-gs = fig.add_gridspec(2, 3, height_ratios=[1.62, 1.0], hspace=0.10, wspace=0.16)
+gs = fig.add_gridspec(2, 3, height_ratios=[1.62, 1.0], hspace=0.20, wspace=0.16)
 a = fig.add_subplot(gs[0, :]); panel_arch(a); tag(a, "A", "BEACON-ECG architecture", y=1.0)
 axs = [fig.add_subplot(gs[1, i]) for i in range(3)]
-panel_ecgs(axs); tag(axs[0], "B", "Representative test-set ECGs and model output", y=1.20)
+panel_ecgs(axs); tag(axs[0], "B", "Representative test-set ECGs and model output", y=1.10, dx=0.085)
 fig.savefig(f"{OUT}/Figure2_model.png", bbox_inches="tight"); plt.close()
 
 fig, (a, b) = plt.subplots(1, 2, figsize=(7.3, 3.1), gridspec_kw={"width_ratios": [1.6, 1]})
-panel_internal(a); tag(a, "A", "Internal test set vs comparators")
-panel_external(b); tag(b, "B", "External validation, no retraining")
+panel_internal(a); tag(a, "A", "Internal test set vs comparators", y=1.30)
+panel_external(b); tag(b, "B", "External validation, no retraining", y=1.30)
 plt.tight_layout(); fig.savefig(f"{OUT}/Figure3_discrimination.png", bbox_inches="tight"); plt.close()
 
 fig, (a, b) = plt.subplots(1, 2, figsize=(6.9, 3.0))
