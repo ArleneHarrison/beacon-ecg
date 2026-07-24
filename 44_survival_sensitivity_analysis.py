@@ -44,14 +44,28 @@ def prepare_echo_normal_survival(
         (predictions["lvef_value"] > 50) & predictions["pred_hfref_le40"].notna()
     ].copy()
     initial_n = len(frame)
+    unobserved_count = 0
+    outcome_source = "legacy death-date observability"
+    if {"outcome_observed_365d", "corrected_dead_365d"}.issubset(frame.columns):
+        observed = frame["outcome_observed_365d"].fillna(False).astype(bool)
+        unobserved_count = int((~observed).sum())
+        frame = frame.loc[observed].copy()
+        if frame["corrected_dead_365d"].isna().any():
+            raise ValueError("observed follow-up rows contain missing corrected labels")
+        outcome_source = "corrected follow-up eligibility"
     days = pd.to_numeric(frame["days_to_death"], errors="coerce")
     negative = days < 0.0
     negative_count = int(negative.sum())
     frame = frame.loc[~negative].copy().reset_index(drop=True)
     days = pd.to_numeric(frame["days_to_death"], errors="coerce")
-    frame["event"] = (
-        days.notna() & days.between(0.0, float(horizon_days), inclusive="both")
-    ).astype(int)
+    if outcome_source == "corrected follow-up eligibility":
+        frame["event"] = frame["corrected_dead_365d"].astype(int)
+        if (frame["event"].eq(1) & days.isna()).any():
+            raise ValueError("corrected death event lacks days_to_death")
+    else:
+        frame["event"] = (
+            days.notna() & days.between(0.0, float(horizon_days), inclusive="both")
+        ).astype(int)
     frame["T"] = np.where(frame["event"].eq(1), days, float(horizon_days))
     frame["T"] = pd.to_numeric(frame["T"], errors="raise").clip(1.0, float(horizon_days))
     frame["aiecg_high"], threshold = top_quantile_indicator(
@@ -60,6 +74,8 @@ def prepare_echo_normal_survival(
     audit: dict[str, int | float] = {
         "echo_normal_before_time_check": int(initial_n),
         "negative_death_times_excluded": negative_count,
+        "unobserved_followup_excluded": unobserved_count,
+        "outcome_source": outcome_source,
         "analysis_n": int(len(frame)),
         "events": int(frame["event"].sum()),
         "risk_score_80th_percentile": threshold,
@@ -193,9 +209,10 @@ def run_survival_sensitivity(predictions: pd.DataFrame) -> dict[str, object]:
             "If the proportional-hazards test is significant, the full-year HR is an average "
             "summary and interval-specific HRs must be reported."
         ),
-        "followup_limitation": (
-            "This server-side sensitivity uses legacy mortality observability; the corrected "
-            "follow-up eligibility flag must be aligned before the final primary model."
+        "followup_eligibility": (
+            "Corrected 365-day outcome observability was applied before survival modelling."
+            if cohort_audit["outcome_source"] == "corrected follow-up eligibility"
+            else "Legacy death-date observability was used."
         ),
     }
 

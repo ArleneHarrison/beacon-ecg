@@ -18,6 +18,12 @@ from manuscript_reference_audit import parse_reference_entries
 USER_AGENT = "BEACON-ECG-reference-audit/1.0 (mailto:corresponding.author@example.org)"
 
 
+def chunked(values: list[str], size: int) -> list[list[str]]:
+    if size <= 0:
+        raise ValueError("chunk size must be positive")
+    return [values[index : index + size] for index in range(0, len(values), size)]
+
+
 def normalise_doi(value: str | None) -> str | None:
     if value is None:
         return None
@@ -70,14 +76,19 @@ def _fetch_json(url: str, retries: int = 4) -> dict[str, Any]:
 def fetch_pubmed_records(pmids: list[str]) -> dict[str, dict[str, Any]]:
     if not pmids:
         return {}
-    query = urllib.parse.urlencode(
-        {"db": "pubmed", "id": ",".join(pmids), "retmode": "json", "version": "2.0"}
-    )
-    payload = _fetch_json(
-        "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?" + query
-    )
-    result = payload.get("result", {})
-    return {pmid: result[pmid] for pmid in pmids if pmid in result}
+    records: dict[str, dict[str, Any]] = {}
+    for batch_index, batch in enumerate(chunked(pmids, size=20)):
+        query = urllib.parse.urlencode(
+            {"db": "pubmed", "id": ",".join(batch), "retmode": "json", "version": "2.0"}
+        )
+        payload = _fetch_json(
+            "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?" + query
+        )
+        result = payload.get("result", {})
+        records.update({pmid: result[pmid] for pmid in batch if pmid in result})
+        if batch_index + 1 < len(chunked(pmids, size=20)):
+            time.sleep(0.4)
+    return records
 
 
 def fetch_crossref_record(doi: str) -> dict[str, Any]:

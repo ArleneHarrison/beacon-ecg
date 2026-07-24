@@ -1,4 +1,4 @@
-from verify_reference_metadata import normalise_doi, parse_declared_metadata
+from verify_reference_metadata import chunked, normalise_doi, parse_declared_metadata
 
 
 def test_normalise_doi_strips_url_prefix_and_terminal_punctuation():
@@ -17,3 +17,11 @@ def test_parse_declared_metadata_extracts_core_fields():
     assert metadata["pages"] == "70–74"
     assert metadata["doi"] == "10.1038/example"
     assert metadata["pmid"] == "30617318"
+
+
+def test_chunked_limits_registry_request_size():
+    assert list(chunked(["1", "2", "3", "4", "5"], size=2)) == [
+        ["1", "2"],
+        ["3", "4"],
+        ["5"],
+    ]

@@ -37,6 +37,27 @@ def test_prepare_echo_normal_excludes_negative_death_times():
     assert prepared.iloc[0]["T"] == 100
 
 
+def test_prepare_echo_normal_uses_corrected_followup_eligibility():
+    module = load_module()
+    frame = pd.DataFrame(
+        {
+            "lvef_value": [60, 55, 58],
+            "pred_hfref_le40": [0.9, 0.1, 0.2],
+            "days_to_death": [50.0, np.nan, np.nan],
+            "outcome_observed_365d": [True, False, True],
+            "corrected_dead_365d": [1.0, np.nan, 0.0],
+            "age_at_ecg": [70, 60, 50],
+            "sex_male": [1, 0, 1],
+        }
+    )
+    prepared, audit = module.prepare_echo_normal_survival(frame)
+    assert len(prepared) == 2
+    assert prepared["event"].tolist() == [1, 0]
+    assert prepared["T"].tolist() == [50.0, 365.0]
+    assert audit["unobserved_followup_excluded"] == 1
+    assert audit["outcome_source"] == "corrected follow-up eligibility"
+
+
 def test_missingness_table_counts_and_percentages():
     module = load_module()
     frame = pd.DataFrame({"a": [1.0, np.nan, 3.0, np.nan], "b": [1, 2, 3, 4]})

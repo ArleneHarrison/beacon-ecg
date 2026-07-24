@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import re
 from pathlib import Path
@@ -67,6 +68,20 @@ def validate_endpoint_rows(
     return errors
 
 
+def apply_corrected_mortality(
+    metrics: dict[str, dict[str, Any]], corrected: dict[str, Any]
+) -> dict[str, dict[str, Any]]:
+    """Replace the legacy mortality endpoint with the aligned follow-up result."""
+    updated = copy.deepcopy(metrics)
+    updated["dead_365d"] = {
+        "display_name": DISPLAY_NAMES["dead_365d"],
+        "n": int(corrected["analysis_rows"]),
+        "events": int(corrected["analysis_events"]),
+        "metrics": corrected["metrics"],
+    }
+    return updated
+
+
 def manuscript_format_checks(text: str, allow_pending: bool = False) -> list[str]:
     errors: list[str] = []
     title_match = re.search(r"^#\s+(.+)$", text, flags=re.MULTILINE)
@@ -96,12 +111,16 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manuscript", type=Path, required=True)
     parser.add_argument("--four-endpoint-json", type=Path, required=True)
+    parser.add_argument("--corrected-mortality-json", type=Path)
     parser.add_argument("--allow-pending", action="store_true")
     args = parser.parse_args()
 
     manuscript = args.manuscript.read_text(encoding="utf-8")
     payload = json.loads(args.four_endpoint_json.read_text(encoding="utf-8"))
     metrics = payload.get("endpoints", payload)
+    if args.corrected_mortality_json is not None:
+        corrected = json.loads(args.corrected_mortality_json.read_text(encoding="utf-8"))
+        metrics = apply_corrected_mortality(metrics, corrected)
     errors = manuscript_format_checks(manuscript, allow_pending=args.allow_pending)
     errors.extend(validate_endpoint_rows(extract_endpoint_rows(manuscript), metrics))
     print(json.dumps({"ok": not errors, "errors": errors}, ensure_ascii=False, indent=2))
