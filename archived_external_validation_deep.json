@@ -1,0 +1,44 @@
+{
+  "cohort": "EchoNext (Columbia University Irving Medical Center) test split",
+  "n_total": 5442,
+  "domain_shift": "EchoNext 250 Hz resampled to 500 Hz; >125 Hz content absent",
+  "note": "severe AS not validated externally (EchoNext provides ordinal AS severity, not Vmax/gradient/AVA)",
+  "hfref_le40": {
+    "n": 4827,
+    "prevalence": 0.1577,
+    "AUROC_external": 0.8962,
+    "CI": [
+      0.8831,
+      0.9087
+    ],
+    "AUPRC_external": 0.6743,
+    "brier": 0.0791,
+    "AUROC_internal_MIMIC": 0.9,
+    "drop_vs_internal": -0.0038,
+    "per_member": {
+      "baseline": 0.8823,
+      "ptbxl": 0.8854,
+      "cog": 0.8889,
+      "vigil": 0.8912
+    }
+  },
+  "lvh": {
+    "n": 4825,
+    "prevalence": 0.0688,
+    "AUROC_external": 0.7814,
+    "CI": [
+      0.7574,
+      0.8054
+    ],
+    "AUPRC_external": 0.2341,
+    "brier": 0.0588,
+    "AUROC_internal_MIMIC": 0.789,
+    "drop_vs_internal": -0.0076,
+    "per_member": {
+      "baseline": 0.7736,
+      "ptbxl": 0.7477,
+      "cog": 0.7647,
+      "vigil": 0.7753
+    }
+  }
+}

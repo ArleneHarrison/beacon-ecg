@@ -2,6 +2,8 @@
 """Generate Supplementary Table S5 (full subgroup results) from the analysis JSONs."""
 import json, numpy as np, pandas as pd
 
+from table_s5_formatting import format_suppressed_prevalence
+
 SP = r"C:/Users/63415/AppData/Local/Temp/claude/d------------02--------AI---07---AI--------------AI-------------------PETCT--------------PETCT---/dce30790-0a57-4f27-8b12-bcb735535fe0/scratchpad"
 OUT = (r"d:/桌面/_按项目整理/02_生信数据与医学AI项目/07_医学AI_深度学习_多项目孵化/"
        r"医学AI深度学习_导师课题项目群/崔老师项目_PETCT多任务_空间转录组深度学习/"
@@ -52,7 +54,7 @@ for task in ["hfref_le40", "as_severe", "lvh", "dead_365d"]:
             stratum = aname if i == 0 else ""
             if "auroc" not in v:
                 L.append(f"| {stratum} | {g} | {v['n']:,} | {v.get('n_events','–')} | "
-                         f"{v.get('prevalence',0)*100:.1f} | *not estimable* | – | – | – | – | – |")
+                         f"{format_suppressed_prevalence(v)} | *not estimable* | – | – | – | – | – |")
             else:
                 ci = v.get("auroc_ci")
                 cis = f"{v['auroc']:.3f} ({ci[0]:.3f}–{ci[1]:.3f})" if ci else f"{v['auroc']:.3f}"
