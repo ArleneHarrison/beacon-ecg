@@ -2,7 +2,9 @@
 
 **B**eyond-**E**cho **A**ssessment of **C**ardiac structure and **O**utcome from a single 12-lead electrocardiogram.
 
-**Final model:** a validation-selected weighted ensemble of four single-ECG networks, two with demographic (age/sex) conditioning. Internal test AUROC: HFrEF 0.900, severe AS 0.860, LVH 0.789, 1-year mortality 0.749. External validation (EchoNext, Columbia, no retraining): HFrEF 0.896, LVH 0.781.
+**Final model:** a validation-selected weighted ensemble of four single-ECG networks, two with demographic (age/sex) conditioning. Internal test AUROC: HFrEF 0.900, severe AS 0.860, LVH 0.789, and 1-year mortality 0.743 in 8,331 patients with observable follow-up. External validation (EchoNext, Columbia, no retraining): HFrEF 0.896 and LVH 0.781.
+
+**Release v1.1.0 correction:** mortality labels, comparator training, incremental analyses and survival analyses use the same reconstructed 365-day follow-up eligibility rule. The correction pipeline is implemented in scripts 40--49 and protected by the tests in `tests/`. The structural endpoint results and external-validation results are unchanged.
 
 This directory contains the complete pipeline used to produce every number in the manuscript,
 from cohort construction to the final analyses. Scripts are numbered in execution order.
